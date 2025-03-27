@@ -6,10 +6,7 @@ namespace Domain.Models.Entities
     {
         [Key]
         public required int Id { get; set; }
-
         [Required]
         public required string Type { get; set; }
-
-
     }
 }
