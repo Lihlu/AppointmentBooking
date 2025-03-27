@@ -16,6 +16,10 @@ namespace AppointmentBooking.Controllers
         public async Task<IActionResult> RegisterUser(UserDto registerUserDto)
         {
             var returnDto = await _authRepository.RegisterUser(registerUserDto);
+            if (returnDto == null)
+            {
+                return BadRequest("User already exists");
+            }
             return Ok(returnDto);
         }
 
