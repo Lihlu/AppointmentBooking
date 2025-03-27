@@ -1,4 +1,5 @@
 using Application.Mapper;
+using Application.Repositories;
 using AppointmentBooking.Repositories;
 using Infastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(MapperProfile));
 builder.Services.AddScoped<IUsersRepository, UsersRepository>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
