@@ -4,8 +4,8 @@ namespace Application.Repositories
 {
     public interface IAuthRepository
     {
-        public Task<UserDto> RegisterUser(UserDto userDto);
+        public Task<UserDto?> RegisterUser(UserDto userDto);
 
-        public Task<string?> Login(LoginUserDto loginUserDto);
+        public Task<TokenResponseDto?> Login(LoginUserDto loginUserDto);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Application.Models;
 using AutoMapper;
@@ -25,8 +26,15 @@ namespace Application.Repositories
             _jwtSettings = jwtSettings.Value;
         }
 
-        public async Task<UserDto> RegisterUser(UserDto userDto)
+        public async Task<UserDto?> RegisterUser(UserDto userDto)
         {
+            bool userExists = await _dbContext.Users.AnyAsync(u => u.Email == userDto.Email);
+
+            if (userExists)
+            {
+                return null;
+            }
+
             var user = _mapper.Map<User>(userDto);
             var hashedPassword = new PasswordHasher<User>().HashPassword(user, userDto.Password);
 
@@ -37,7 +45,7 @@ namespace Application.Repositories
             await _dbContext.SaveChangesAsync();
             return _mapper.Map<UserDto>(user);
         }
-        public async Task<string?> Login(LoginUserDto loginUserDto)
+        public async Task<TokenResponseDto?> Login(LoginUserDto loginUserDto)
         {
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == loginUserDto.Email);
 
@@ -48,20 +56,26 @@ namespace Application.Repositories
 
             var passwordVerified = new PasswordHasher<User>().VerifyHashedPassword(user, user.PasswordHash, loginUserDto.Password) == PasswordVerificationResult.Success;
 
-            if (passwordVerified)
+            if (!passwordVerified)
             {
-                var token = CreateToken(user);
-                return token;
+                return null;
             }
 
-            return null;
+            var response = new TokenResponseDto
+            {
+                AccessToken = CreateToken(user),
+                RefreshToken = await GenerateAndSaveRefreshTokenAsync(user)
+            };
+            return response;
         }
 
         private string CreateToken(User user)
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Email)
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim (ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Role, user.Role),
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Token!));
@@ -77,6 +91,23 @@ namespace Application.Repositories
 
             return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
 
+        }
+
+        private string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
+
+        private async Task<string> GenerateAndSaveRefreshTokenAsync(User user)
+        {
+            var refreshToken = GenerateRefreshToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            await _dbContext.SaveChangesAsync();
+            return refreshToken;
         }
     }
 }
