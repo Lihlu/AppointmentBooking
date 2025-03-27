@@ -51,16 +51,6 @@ namespace AppointmentBooking.Controllers
             return Ok(user);
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> AddUser(UserDto addUserDto)
-        {
-
-            var returnDto = await _usersRepository.AddUser(addUserDto);
-
-            return Ok(returnDto);
-
-        }
-
         [HttpPut]
         [Route("{id:int}")]
         public async Task<IActionResult> UpdateUser(int id, UserDto updateUserDto)
@@ -92,19 +82,6 @@ namespace AppointmentBooking.Controllers
             return Ok();
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginUserDto loginUserDto)
-        {
 
-            var result = await _usersRepository.Login(loginUserDto);
-
-            if (result is null)
-            {
-                return NotFound();
-            }
-
-            return Ok(result);
-
-        }
     }
 }
