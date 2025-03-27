@@ -44,23 +44,19 @@ namespace AppointmentBooking.Repositories
             return userDto;
         }
 
+        public async Task<string?> DeleteUser(int id)
+        {
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
 
-        //public async Task<string?> DeleteUser(int id)
-        //{
-        //    var user = _dbContext.Users.Find(id);
+            if (user is null)
+            {
+                return null;
+            }
 
-        //    if (user is null)
-        //    {
-        //        return null;
-        //    }
+            _dbContext.Users.Remove(user);
+            await _dbContext.SaveChangesAsync();
 
-        //    _dbContext.Users.Remove
-        //      await  _dbContext.Users.SaveChangesAsync();
-
-        //    return "deleted";
-        //}
-
-
-
+            return "deleted";
+        }
     }
 }
