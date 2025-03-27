@@ -1,14 +1,8 @@
 ﻿using Infastructure.Data;
-using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Domain.Models.Entities;
 using AppointmentBooking.Repositories;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Http.HttpResults;
-using System.Threading.Tasks;
 using Application.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AppointmentBooking.Controllers
 {
@@ -18,16 +12,16 @@ namespace AppointmentBooking.Controllers
     public class UsersController : ControllerBase
     {
         private readonly ApplicationDbContext dbContext;
-        private readonly IMapper _mapper;
         private readonly IUsersRepository _usersRepository;
 
-        public UsersController(ApplicationDbContext dbContext, IMapper mapper, IUsersRepository usersRepository)
+        public UsersController(ApplicationDbContext dbContext, IUsersRepository usersRepository)
         {
             this.dbContext = dbContext;
-            _mapper = mapper;
             _usersRepository = usersRepository;
 
         }
+
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -55,7 +49,7 @@ namespace AppointmentBooking.Controllers
         [Route("{id:int}")]
         public async Task<IActionResult> UpdateUser(int id, UserDto updateUserDto)
         {
-            var userDto = await _usersRepository.UpdateUser(id, updateUserDto);
+            UserDto? userDto = await _usersRepository.UpdateUser(id, updateUserDto);
 
             if (userDto is null)
             {
@@ -67,21 +61,16 @@ namespace AppointmentBooking.Controllers
 
         [HttpDelete]
         [Route("{id:int}")]
-        public IActionResult DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = dbContext.Users.Find(id);
+            string? result = await _usersRepository.DeleteUser(id);
 
-            if (user is null)
+            if (result is null)
             {
                 return NotFound();
             }
 
-            dbContext.Users.Remove(user);
-            dbContext.SaveChanges();
-
-            return Ok();
+            return Ok(result);
         }
-
-
     }
 }
