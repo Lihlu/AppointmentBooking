@@ -15,9 +15,6 @@ namespace Application.Mapper
             CreateMap<LoginUserDto, User>().ForMember(dest => dest.PasswordHash, input => input.MapFrom(i => i.Password)).ReverseMap();
 
 
-            //CreateMap<UserDto, User>().ForMember(dest => dest.PasswordHash, input => input.MapFrom(i => i.Password))
-            //   .ReverseMap();
-
         }
     }
 }
